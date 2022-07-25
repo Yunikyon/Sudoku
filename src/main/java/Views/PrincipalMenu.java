@@ -1,10 +1,12 @@
 package Views;
 
+import Classes.Difficulty;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 
 public class PrincipalMenu extends JFrame{
-    private JButton newGameButton;
+    private JButton easyButton;
     private JPanel MainPanel;
     private JButton mediumButton;
     private JButton hardButton;
@@ -19,18 +21,17 @@ public class PrincipalMenu extends JFrame{
         setLocationRelativeTo(null);
         setVisible(true);
 
-        newGameButton.addActionListener(this::newGameListener);
+        easyButton.addActionListener(this::newGameListener);
     }
 
     private void newGameListener(ActionEvent actionEvent) {
         System.out.println("Click on newGameListener");
 
-        this.setVisible(false);
-
-        GameWindow gameWindow = new GameWindow(9);
+        GameWindow gameWindow = new GameWindow(9, Difficulty.EASY);
         gameWindow.setLocationRelativeTo(this);
         gameWindow.setVisible(true);
 
+        this.setVisible(false);
         dispose();
     }
 
