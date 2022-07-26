@@ -14,26 +14,38 @@ public class GameWindow extends JFrame {
     private JPanel GamePanel;
 
     private JTextField[] textFields;
+    private JLabel[] labels;
 
-    public GameWindow(int nLines, Difficulty difficulty){
+    public GameWindow(Difficulty difficulty){
         setContentPane(MainPanel);
+        setResizable(false);
 
+        initPuzzlePanel(difficulty);
+
+        pack();
+    }
+
+    private void initPuzzlePanel(Difficulty difficulty) {
         GamePanel.setLayout(new GridBagLayout());
 
-        //Set config for lines
+        int nLines = 9;
+
+        // Create the sudoku level
+        SquareMatrix squareMatrix = new SquareMatrix(difficulty, 3);
+        int[][] matrix = squareMatrix.getUnsolvedPuzzle();
+
+//        textFields = new JTextField[squareMatrix.getRemovedNumbers()];
+        textFields = new JTextField[nLines*nLines];
+
+//        labels = new JLabel[(nLines*nLines) - squareMatrix.getRemovedNumbers()];
+        labels = new JLabel[nLines*nLines];
+
+        // Set configurations for split lines
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weightx = 1;
         gbc.weighty = 1;
         gbc.gridy = 0;
-
-//        gbc.gridx=0;
-
-//        GridBagConstraints verticalGbc = new GridBagConstraints();
-//        verticalGbc.fill = GridBagConstraints.BOTH;
-//        verticalGbc.weightx = 1;
-//        verticalGbc.weighty = 1;
-//        verticalGbc.gridx = 0;
 
         GridBagConstraints horizontalSplit = new GridBagConstraints();
         horizontalSplit.fill = GridBagConstraints.BOTH;
@@ -47,49 +59,53 @@ public class GameWindow extends JFrame {
         verticalSplit.gridy = 0;
         verticalSplit.gridheight = GridBagConstraints.REMAINDER;
 
-        textFields = new JTextField[nLines*nLines];
-
-        SquareMatrix squareMatrix = new SquareMatrix(difficulty, 3);
-        int[][] matrix = squareMatrix.getMatrix();
-
         //Draw matrix
-        for (int i = 0; i < nLines; i++) { //rows
+        for (int rows = 0; rows < nLines; rows++) { //rows
             gbc.gridy++;
 
-//            gbc.gridy=i;
-            for (int j = 0; j < nLines; j++) { //columns
-//                gbc.gridx++;
+            for (int columns = 0; columns < nLines; columns++) { //columns
 
-                gbc.gridx = j;
+                gbc.gridx = columns;
 
-                JTextField textField = new JTextField(Integer.toString(matrix[i][j]));
+                // Create a textField
+                JTextField textField = new JTextField("");
                 textField.setHorizontalAlignment(SwingConstants.CENTER); //center text
-                textFields[nLines*i + j] = textField;
-                GamePanel.add(textField, gbc);
+                textField.setBorder(BorderFactory.createLineBorder(Color.gray));
+                textFields[nLines * rows + columns] = textField;
 
-                if(difficulty == Difficulty.EASY) {
-                    if ((j + 1) % 3 == 0 && j<nLines-1) {
-                        System.out.println(" Vertical Split");
-                        verticalSplit.gridx = j+1;
-                        verticalSplit.gridy = gbc.gridy;
-                        JPanel separator = new VerticalSplit(j);
-                        GamePanel.add(separator, verticalSplit);
-                    }
+                JLabel label = new JLabel(Integer.toString(matrix[rows][columns]));
+                label.setHorizontalAlignment(SwingConstants.CENTER); //center text
+                label.setBorder(BorderFactory.createLineBorder(Color.gray));
+//                label.setBackground(Color.pink);
+//                label.setOpaque(true);
+                labels[nLines * rows + columns] = label;
+
+                if(matrix[rows][columns]==0) {
+                    GamePanel.add(textField, gbc);
+                }else {
+                    GamePanel.add(label, gbc);
                 }
+
+                // Draw vertical split lines
+                if ((columns + 1) % 3 == 0 && columns<nLines-1) {
+                    System.out.println(" Vertical Split");
+                    verticalSplit.gridx = columns+1;
+                    verticalSplit.gridy = gbc.gridy;
+                    JPanel separator = new VerticalSplit(columns);
+                    GamePanel.add(separator, verticalSplit);
+                }
+
             }
 
-            if(difficulty == Difficulty.EASY) {
-                if ((i + 1) % 3 == 0 && i<nLines-1) {
-                    System.out.println("Split");
-                    horizontalSplit.gridy = gbc.gridy + 1;
-                    gbc.gridy+=2;
-//                    JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
-                    JPanel separator = new HorizontalSplit();
-                    GamePanel.add(separator, horizontalSplit);
-                }
+            // Draw horizontal split lines
+            if ((rows + 1) % 3 == 0 && rows<nLines-1) {
+                System.out.println("Split");
+                horizontalSplit.gridy = gbc.gridy + 1;
+                gbc.gridy+=2;
+                JPanel separator = new HorizontalSplit();
+                GamePanel.add(separator, horizontalSplit);
             }
+
         }
-
-        pack();
     }
 }

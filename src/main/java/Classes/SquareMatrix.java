@@ -5,67 +5,102 @@ import java.util.Random;
 
 public class SquareMatrix {
 //    private Hashtable<Integer, int[][]> subMatrixes;
-    private int[][] matrix;
+    private int[][] unsolvedPuzzle;
+    private int[][] solution;
     private int nLines;
+    private int removedNumbers;
     Random random;
 
     public SquareMatrix (Difficulty difficulty, int seed){
         random = new Random(seed);
-        boolean success;
+        this.nLines = 9;
 
-        if(difficulty == Difficulty.EASY) { //9x9 Matrix
-            this.nLines = 9;
-
-            matrix = new int[nLines][nLines];
-            for (int i = 0; i < nLines; i++) {
-                for (int j = 0; j < nLines; j++) {
-                    matrix[i][j] = 0;
-                }
-            }
-
-            //Diagonal Matrixes - independent matrixes
-            fillDiagonalMatrixes();
-
-            //Other Matrixes
-            boolean found = false;
-            do {
-                //Second Matrix
-                do {
-                    success = fillSubMatrix(0, 3);
-                } while (!success);
-
-                //Third Matrix
-                do {
-                    success = fillSubMatrix(0, 6);
-                } while (!success);
-
-                //Sixth Matrix
-                do {
-                    success = fillSubMatrix(3, 6);
-                } while (!success);
-
-                //Fourth Matrix
-                do {
-                    success = fillSubMatrix(3, 0);
-                } while (!success);
-
-                //Seventh Matrix
-                do {
-                    success = fillSubMatrix(6, 3);
-                } while (!success);
-
-                int tries = 0;
-                //Eighth Matrix
-                do {
-                    tries++;
-                    success = fillSubMatrix(6, 0);
-                } while (!success && tries!=8);
-
-                if(tries==8 && success){
-                    found = true;
-                }
-            }while (!found);
+        switch (difficulty){
+            case EASY:
+                removedNumbers = 35;
+                break;
+            case MEDIUM:
+                removedNumbers = 50;
+                break;
+            default: // HARD
+                removedNumbers = 70;
+                break;
         }
+
+        unsolvedPuzzle = new int[nLines][nLines];
+        solution = new int[nLines][nLines];
+        for (int i = 0; i < nLines; i++) {
+            for (int j = 0; j < nLines; j++) {
+                solution[i][j] = 0;
+            }
+        }
+
+        //Diagonal Matrixes - independent matrixes
+        fillDiagonalMatrixes();
+
+        //Other Matrixes
+        fillOtherMatrixes();
+
+        for (int i = 0; i < nLines; i++) {
+            for (int j = 0; j < nLines; j++) {
+                unsolvedPuzzle[i][j] = solution[i][j];
+            }
+        }
+
+        for (int i = 0; i < removedNumbers; i++) {
+            int row = random.nextInt(9);
+            int column = random.nextInt(9);
+
+            if(unsolvedPuzzle[row][column]!=0){
+                unsolvedPuzzle[row][column] = 0;
+            }else{
+                i--;
+            }
+        }
+
+
+    }
+
+    private void fillOtherMatrixes() {
+        boolean success;
+        boolean found = false;
+        do {
+            //Second Matrix
+            do {
+                success = fillSubMatrix(0, 3);
+            } while (!success);
+
+            //Third Matrix
+            do {
+                success = fillSubMatrix(0, 6);
+            } while (!success);
+
+            //Sixth Matrix
+            do {
+                success = fillSubMatrix(3, 6);
+            } while (!success);
+
+            //Fourth Matrix
+            do {
+                success = fillSubMatrix(3, 0);
+            } while (!success);
+
+            //Seventh Matrix
+            do {
+                success = fillSubMatrix(6, 3);
+            } while (!success);
+
+            int tries = 0;
+            //Eighth Matrix
+            do {
+                tries++;
+                success = fillSubMatrix(6, 0);
+            } while (!success && tries!=8);
+
+            if(tries==8 && success){
+                found = true;
+            }
+        }while (!found);
     }
 
     private void fillDiagonalMatrixes() {
@@ -83,14 +118,16 @@ public class SquareMatrix {
         int number;
 
         for (int i = minRow; i < minRow+3; i++) {
-            System.out.println("--------LINE " + i + "----------");
+//            System.out.println("--------LINE " + i + "----------");
             for (int j = minColumn; j < minColumn+3; j++) {
-                System.out.println("............COLUMN " + j + "............");
+//                System.out.println("............COLUMN " + j + "............");
                 do {
                     number = random.nextInt(9) + 1;
+
                     isNumberValid = !hasNumberIn3x3Matrix(i, j, number);
+
                     if (isNumberValid) {
-                        matrix[i][j] = number;
+                        solution[i][j] = number;
                     }
                 } while (!isNumberValid);
             }
@@ -104,25 +141,31 @@ public class SquareMatrix {
         LinkedList<Integer> testedNumbers;
 
         for (int i = minRow; i < minRow+3; i++) {
-            System.out.println("--------LINE " + i + "----------");
+//            System.out.println("--------LINE " + i + "----------");
             for (int j = minColumn; j < minColumn+3; j++) {
-                System.out.println("............COLUMN " + j + "............");
+//                System.out.println("............COLUMN " + j + "............");
                 testedNumbers = new LinkedList<>();
+
                 do {
                     number = random.nextInt(9) + 1;
+
                     if(testedNumbers.contains(number)){
                         isNumberValid = false;
                         continue;
                     }
+
                     isNumberValid = !hasNumberInLine(i, number) && !hasNumberInColumn(j, number)
                             && !hasNumberIn3x3Matrix(i, j, number);
+
                     if (isNumberValid) {
-                        matrix[i][j] = number;
+                        solution[i][j] = number;
                         System.out.println(number);
                     }
+
                     testedNumbers.add(number);
                 } while (!isNumberValid && testedNumbers.size()!=8);
-                if(!isNumberValid){
+
+                if(!isNumberValid){ // if the last cell of the 3x3 matrix can't be filled
                     resetSubMatrix(minRow, minColumn);
                     return false;
                 }
@@ -134,7 +177,7 @@ public class SquareMatrix {
     private void resetSubMatrix(int minRow, int minColumn) {
         for (int i = minRow; i < minRow+3; i++) {
             for (int j = minColumn; j < minColumn+3; j++) {
-                matrix[i][j] = 0;
+                solution[i][j] = 0;
             }
         }
     }
@@ -171,7 +214,7 @@ public class SquareMatrix {
     private boolean findInMatrix(int number, int minRow, int minColumn) {
         for (int i = minRow; i < minRow+3; i++) {
             for (int j = minColumn; j < minColumn+3; j++) {
-                if(matrix[i][j] == number){
+                if(solution[i][j] == number){
                     return true;
                 }
             }
@@ -182,7 +225,7 @@ public class SquareMatrix {
 
     private boolean hasNumberInLine(int line, int number){
         for (int i = 0; i < nLines; i++) {
-            if(matrix[line][i] == number){
+            if(solution[line][i] == number){
                 return true;
             }
         }
@@ -191,14 +234,22 @@ public class SquareMatrix {
 
     private boolean hasNumberInColumn(int column, int number){
         for (int i = 0; i < nLines; i++) {
-            if(matrix[i][column] == number){
+            if(solution[i][column] == number){
                 return true;
             }
         }
         return false;
     }
 
-    public int[][] getMatrix() {
-        return matrix;
+    public int[][] getSolution() {
+        return solution;
+    }
+
+    public int[][] getUnsolvedPuzzle() {
+        return unsolvedPuzzle;
+    }
+
+    public int getRemovedNumbers() {
+        return removedNumbers;
     }
 }
